@@ -1,32 +1,33 @@
 from bitmex_websocket import BitMEXWebsocket
 import logging
 from time import sleep
+from util.apikeys import api_key,api_secret
 
 
 # Basic use of websocket.
 def run():
     logger = setup_logger()
-
-    # Instantiating the WS will make it connect. Be sure to add your api_key/api_secret.
-    ws = BitMEXWebsocket(endpoint="https://testnet.bitmex.com/api/v1", symbol="XBTUSD",
-                         api_key=None, api_secret=None)
-
-    logger.info("Instrument data: %s" % ws.get_instrument())
+    ws = BitMEXWebsocket(
+        endpoint="wss://www.bitmex.com/realtime",
+        symbol="XBTUSD",
+        api_key=api_key,
+        api_secret=api_secret
+    )
 
     # Run forever
     while(ws.ws.sock.connected):
-        logger.info("Ticker: %s" % ws.get_ticker())
-        if ws.api_key:
-            logger.info("Funds: %s" % ws.funds())
-        logger.info("Market Depth: %s" % ws.market_depth())
-        logger.info("Recent Trades: %s\n\n" % ws.recent_trades())
+        #ticker=ws.get_ticker()
+        instrument=ws.get_instrument()
+
+        logger.info("Open Interest: "+str(instrument['openInterest']))
+
         sleep(10)
 
 
 def setup_logger():
     # Prints logger info to terminal
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)  # Change this to DEBUG if you want a lot more info
+    logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     # create formatter
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
