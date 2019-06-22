@@ -1,4 +1,4 @@
-from bitmex_websocket import BitMEXWebsocket
+from app.bitmex_websocket import BitMEXWebsocket
 import logging
 from time import sleep
 from util.apikeys import api_key,api_secret
