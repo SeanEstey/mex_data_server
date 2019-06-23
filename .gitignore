@@ -1,3 +1,4 @@
-util/apikeys.py
+conf/mexapikey.py
+conf/gservkeys.py
 *.pyc
 util/__pycache__

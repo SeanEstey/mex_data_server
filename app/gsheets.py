@@ -1,7 +1,5 @@
-import gc, logging, re
-from app import get_keys
-from .timer import Timer
-from .gservice_acct import auth
+import logging, re
+from app.gserv_acct import auth
 from googleapiclient.errors import HttpError
 log = logging.getLogger(__name__)
 
@@ -145,15 +143,15 @@ class Wks():
             })
 
         try:
-			self.service.spreadsheets().values().batchUpdate(
-				spreadsheetId = self.ss_id,
-				body = {
+            self.service.spreadsheets().values().batchUpdate(
+                spreadsheetId = self.ss_id,
+                body = {
                     "valueInputOption": 'USER_ENTERED',
                     "data": data
                 }
-			).execute(num_retries=3)
+            ).execute(num_retries=3)
         except HttpError as e:
-			handleHttpError(e)
+            handleHttpError(e)
 
     #---------------------------------------------------------------
     def textFormat(self, text_format, ranges):
@@ -179,7 +177,7 @@ class Wks():
         https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#CellFormat
         """
 
-        print 'properties=%s' % self.propObj
+        print('properties=%s' % self.propObj)
 
         requests = []
 
@@ -203,19 +201,19 @@ class Wks():
             })
 
         try:
-			result = self.service.spreadsheets().batchUpdate(
+            result = self.service.spreadsheets().batchUpdate(
                 spreadsheetId = self.ss_id,
                 body = {"requests": requests}
-			).execute(num_retries=3)
+            ).execute(num_retries=3)
         except HttpError as e:
-			handleHttpError(e)
+            handleHttpError(e)
         else:
             log.debug('result=%s', result)
 
     #---------------------------------------------------------------
     def appendRows(self, values):
 
-        lastRow = self._getLastRow()
+        lastRow = self.numRows() #self._getLastRow()
         a1_start = to_range(lastRow + 1,1)
         a1_end = to_range(lastRow + 1 + len(values), self.numColumns())
         a1 = '%s:%s' % (a1_start, a1_end)
@@ -226,7 +224,7 @@ class Wks():
             _ss_values_append(self.service, self.ss_id, self.title, a1, values)
         else:
             _ss_values_update(self.service, self.ss_id, self.title, a1, values)
-        self._refresh()
+        #self._refresh()
 
     #---------------------------------------------------------------
     def __init__(self, service, ss_id, sheetObj):
@@ -238,8 +236,6 @@ class Wks():
         self.title = sheetObj['properties']['title']
 
         log.debug('Opened "%s" wks.', self.title)
-
-
 
 #-------------------------------------------------------------------------------
 def handleHttpError(e):
@@ -367,6 +363,8 @@ def _ss_values_append(service, ss_id, wks, range_, values):
                 "majorDimension": "ROWS"
             }
         ).execute(num_retries=3)
+    except TypeError as e:
+        log.exception("_ss_values_append type err")
     except Exception as e:
         handleHttpError(e)
 

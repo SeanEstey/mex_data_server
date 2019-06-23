@@ -1,0 +1,6 @@
+pandas
+numpy
+beautifulsoup4==4.6.0
+matplotlib
+lxml
+nsepy

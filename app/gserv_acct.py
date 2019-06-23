@@ -37,36 +37,3 @@ def auth(keyfile_dict, name=None, scopes=None, version=None):
         log.exception('Error acquiring %s service: %s', name, e.message)
         raise
 
-#-------------------------------------------------------------------------------
-def _google_auth(json_cred):
-    """google-auth not yet supported by googleapiclient
-    """
-
-    import httplib2
-    from googleapiclient.discovery import build
-    from google.oauth2 import service_account
-    from google.auth.transport.urllib3 import AuthorizedHttp
-
-    timer = Timer()
-
-    #http = httplib2.Http()
-    scopes=['https://www.googleapis.com/auth/spreadsheets']
-    name='sheets'
-    version='v4'
-
-    creds = service_account.Credentials.from_service_account_info(json_cred)
-    scoped_creds = creds.with_scopes(scopes)
-
-    log.debug('Setup credentials. Value=%s [%s]', scoped_creds.valid, timer.clock(stop=False))
-
-    authed_http = AuthorizedHttp(scoped_creds)
-
-    try:
-        service = build('sheets', 'v4', http=authed_http) #, cache_discovery=False)
-    except Exception as e:
-        log.exception('Failed to acquire Sheets client.')
-        raise
-    else:
-        log.debug('Acquired Sheets client. [%s]', timer.clock(stop=False))
-
-        return service
