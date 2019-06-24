@@ -13,12 +13,11 @@ def trade_stats(trades, prev_trd_id):
     if largest['trdMatchID'] != prev_trd_id:
         side='BUY' if n_bought > n_sold else 'SELL'
         perc=n_bought/(n_bought+n_sold) if side=='BUY' else n_sold/(n_bought+n_sold)
-        log.info("{0} contracts Bought, {1} Sold ({2:0.2f}% {3} ratio)".format(
-            abbrevnum(n_bought), abbrevnum(n_sold), perc*100, side))
+        log.info("Recent Trades: {0} bought, {1} sold, {2}% {3} volume".format(
+            abbrevnum(n_bought), abbrevnum(n_sold), int(perc*100), side))
 
         # Check for Chad trades
-        chads=[x for x in trades if x['size'] > 1000000]
-        for chad in chads:
+        for chad in [x for x in trades if x['size'] > 1000000]
             verb='bought' if chad['side']=='Buy' else 'sold'
             log.info("***CHAD TRADE: {0:,} contracts market {1}.***".format(chad['size'],verb))
 
@@ -27,7 +26,7 @@ def trade_stats(trades, prev_trd_id):
 #-------------------------------------------------------------------------------
 def instrum_stats(instruments):
     """ Print Open Interest, Funding Rate """
-    log.info('{0}:${1:,} Funding:{2}% OI:${3}'.format(
+    log.info('{0}:${1:,}, funding:{2}%, openInterest:${3}'.format(
         instruments[0]['underlying'],
         int(instruments[0]['lastPrice']),
         instruments[0]['fundingRate']*100,

@@ -1,5 +1,6 @@
 import logging
 import json
+import websocket
 from time import sleep
 from datetime import datetime
 
@@ -8,7 +9,6 @@ from app.gsheets import SS
 from app.analyze import *
 from app.bitmex_websocket import BitMEXWebsocket
 from app.timer import Timer
-from app.utils import abbrevnum
 from conf.mexapikey import api_key,api_secret
 from conf.gservkeys import gservacct
 from conf.conf import *
@@ -28,8 +28,16 @@ def run():
                 api_key=api_key,
                 api_secret=api_secret
             ))
+        except websocket.WebSocketTimeoutException as e:
+            logger.critical("websocket timeout: %s" % str(e))
+            return False
+        except websocket.WebSocketException as e:
+            logger.critical("websocket error: %s" % str(e))
+            return False
         except Exception as e:
-            logger.critical("Doh! "+str(e))
+            logger.critical("unknown websocket error: %s" % str(e))
+            return False
+        sleep(3) # Avoid being throttled for too many requests
 
     ss_tmr=Timer(name="ss_tmr", expire="every 60 clock minutes utc", quiet=True)
     prnt_tmr=Timer(name="prnt_tmr", expire="every 1 clock minutes utc", quiet=True)
@@ -41,12 +49,12 @@ def run():
         for _ws in ws:
             if _ws.exited:
                 logger.critical("lost socket connection to "+_ws.symbol)
+                continue
             else:
                 instruments.append(_ws.get_instrument())
 
         prev_trd_id=trade_stats(ws[0].recent_trades(),prev_trd_id)
 
-        # Print instrument data to console
         if prnt_tmr.remain()==0:
             prnt_tmr.reset()
             instrum_stats(instruments)
