@@ -3,6 +3,7 @@ import pytz
 import tzlocal
 import dateparser
 from datetime import datetime, timedelta, time, date
+from math import floor, log10
 from pprint import pformat
 log = logging.getLogger(__name__)
 
@@ -198,3 +199,26 @@ def to_float(val, dec=None):
     elif not is_number(val):
         return None
     return round(float(val),dec) if dec else float(val)
+
+#-------------------------------------------------------------------------------
+def abbrevnum(num):
+    """ Takes integer and returns a formatted string """
+    try:
+        n_zeros = floor(log10(abs(num)))
+    except ValueError as e:
+        print("abbrevnum:"+str(e))
+        return "Error"
+    # Ignore < 1000
+    if n_zeros < 3:
+        return n_zeros
+    # Thousands
+    elif 3 <= n_zeros <= 5:
+        return str(round(num/(10**3), 1)) + 'k'
+    # Millions
+    elif 6 <= n_zeros <= 8:
+        return str(round(num/(10**6), 1)) + 'M'
+    # Billions
+    elif 9 <= n_zeros <= 11:
+        return str(round(num/(10**9), 1)) + 'B'
+    else:
+        raise ValueError('Values larger than trillion not supported')

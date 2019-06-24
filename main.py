@@ -5,8 +5,10 @@ from datetime import datetime
 
 from app import *
 from app.gsheets import SS
+from app.analyze import *
 from app.bitmex_websocket import BitMEXWebsocket
 from app.timer import Timer
+from app.utils import abbrevnum
 from conf.mexapikey import api_key,api_secret
 from conf.gservkeys import gservacct
 from conf.conf import *
@@ -27,12 +29,13 @@ def run():
                 api_secret=api_secret
             ))
         except Exception as e:
-            logger.critical(str(e))
+            logger.critical("Doh! "+str(e))
 
     ss_tmr=Timer(name="ss_tmr", expire="every 60 clock minutes utc", quiet=True)
     prnt_tmr=Timer(name="prnt_tmr", expire="every 1 clock minutes utc", quiet=True)
 
     # Main loop
+    prev_trd_id=""
     while(ws[0].ws.sock.connected):
         instruments=[]
         for _ws in ws:
@@ -41,17 +44,12 @@ def run():
             else:
                 instruments.append(_ws.get_instrument())
 
-        print_chad(ws[0].recent_trades())
+        prev_trd_id=trade_stats(ws[0].recent_trades(),prev_trd_id)
 
         # Print instrument data to console
         if prnt_tmr.remain()==0:
             prnt_tmr.reset()
-            logger.info('Symbol:{0} Price:${1:,} Funding:{2}% OpenInterest:${3:,}'.format(
-                instruments[0]['underlying'],
-                int(instruments[0]['lastPrice']),
-                instruments[0]['fundingRate']*100,
-                sum([x['openInterest'] for x in instruments])
-            ))
+            instrum_stats(instruments)
 
         # Append data to gsheet
         if ss_tmr.remain()==0:
@@ -60,16 +58,6 @@ def run():
         sleep(10)
 
     logger.critical("lost socket connection. exiting...")
-
-#-------------------------------------------------------------------------------
-def print_chad(trades):
-    chads=[x for x in trades if x['size'] > 1000000]
-    for chad in chads:
-        verb='bought' if chad['side']=='Buy' else 'sold'
-        print("Chad Trade: {0:,} contracts market {1}.".format(chad['size'],verb))
-    if len(chads)==0:
-        biggest=sorted(trades, key=lambda k: k['size'])[-1]
-        print("{0:,} non-chad trades, {1:,} contracts largest {2}.".format(len(trades),biggest['size'],biggest['side']))
 
 #-------------------------------------------------------------------------------
 def write_gsheet(instruments):
@@ -86,6 +74,7 @@ def write_gsheet(instruments):
         int(sum([x['openInterest'] for x in instruments])/100000)               # Total OI
     ]
     wks.appendRows([row])
+
 
 
 if __name__ == "__main__":
