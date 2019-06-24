@@ -48,8 +48,9 @@ def run():
         instruments=[]
         for _ws in ws:
             if _ws.exited:
+                # TODO attempt reconnect to websocket
                 logger.critical("lost socket connection to "+_ws.symbol)
-                continue
+                return False
             else:
                 instruments.append(_ws.get_instrument())
 

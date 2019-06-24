@@ -17,7 +17,7 @@ def trade_stats(trades, prev_trd_id):
             abbrevnum(n_bought), abbrevnum(n_sold), int(perc*100), side))
 
         # Check for Chad trades
-        for chad in [x for x in trades if x['size'] > 1000000]
+        for chad in [x for x in trades if x['size'] > 1000000]:
             verb='bought' if chad['side']=='Buy' else 'sold'
             log.info("***CHAD TRADE: {0:,} contracts market {1}.***".format(chad['size'],verb))
 
